@@ -25,7 +25,7 @@ public class DriverManager {
      */
     public static void initializeDriver() {
         String browserName = config.getBrowser().toLowerCase();
-        boolean headless = config.isHeadless();
+        String headless = System.getProperty("headless", "false"); // default to false
 
         switch (browserName) {
             case "chrome":
@@ -40,7 +40,7 @@ public class DriverManager {
                 chromeOptions.addArguments("--disable-gpu");
                 chromeOptions.addArguments("--start-maximized");
 
-                if (headless) {
+                if (headless.equalsIgnoreCase("true")) {
                     chromeOptions.addArguments("--headless");
                 }
 
@@ -54,7 +54,7 @@ public class DriverManager {
                 WebDriverManager.firefoxdriver().setup();
                 FirefoxOptions firefoxOptions = new FirefoxOptions();
 
-                if (headless) {
+                if (headless.equalsIgnoreCase("true")) {
                     firefoxOptions.addArguments("--headless");
                 }
 

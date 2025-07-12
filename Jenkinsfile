@@ -65,7 +65,7 @@ pipeline {
 
                     // Add test suite selection
                     switch(params.TEST_SUITE) {
-                        case 'team-wins':
+                    case 'team-wins':
                             testCommand += " -Dtest=TeamWinsTest"
                             break
                         case 'top-players':
@@ -85,38 +85,41 @@ pipeline {
             }
             post {
                 always {
-                    // Archive test results
-                    publishTestResults testResultsPattern: 'target/surefire-reports/*.xml'
+                    // Publish TestNG results using correct method
+                    publishTestNG reportFilenamePattern: 'target/surefire-reports/testng-results.xml'
+
+                    // Archive allure results
                     archiveArtifacts artifacts: 'target/allure-results/**', allowEmptyArchive: true
-                    allure commandline: 'allure', results: [[path: 'target/allure-results']]
                 }
             }
         }
 
         stage('Generate Allure Report') {
+            when {
+                // Only generate report if allure results exist
+                expression {
+                    fileExists('target/allure-results')
+                }
+            }
             steps {
                 script {
                     echo "📊 Generating Allure test report..."
-                    
+
                     // Ensure the report directory exists
                     sh "mkdir -p ${env.ALLURE_REPORT_PATH}"
-                    
-                    // Generate Allure report using the configured paths
-                    sh "mvn allure:report -Dallure.results.directory=${env.ALLURE_RESULTS_PATH} -Dallure.report.directory=${env.ALLURE_REPORT_PATH}"
-                    
-                    // Publish Allure report
-                    allure([
-                        includeProperties: false,
-                        jdk: '',
-                        properties: [],
-                        reportBuildPolicy: 'ALWAYS',
-                        results: [[path: env.ALLURE_RESULTS_PATH]],
-                        report: env.ALLURE_REPORT_PATH
-                    ])
-                    
-                    // Archive the Allure report
-                    archiveArtifacts artifacts: "${env.ALLURE_REPORT_PATH}/**/*", allowEmptyArchive: true
                 }
+
+                // Generate and publish Allure report
+                allure([
+                    includeProperties: false,
+                    jdk: '',
+                    properties: [],
+                    reportBuildPolicy: 'ALWAYS',
+                    results: [[path: env.ALLURE_RESULTS_PATH]]
+                ])
+
+                // Archive the generated report
+                archiveArtifacts artifacts: "${env.ALLURE_REPORT_PATH}/**", allowEmptyArchive: true
             }
         }
     }
@@ -127,21 +130,17 @@ pipeline {
                 echo "🧹 Cleaning up workspace..."
             }
 
-            // Clean up workspace
-            cleanWs()
+            // Publish final TestNG results
+            publishTestNG reportFilenamePattern: 'target/surefire-reports/testng-results.xml'
+
+            // Archive screenshots if any test failures occurred
+            archiveArtifacts artifacts: 'target/screenshots/**', allowEmptyArchive: true
         }
 
         success {
             script {
                 echo "✅ Pipeline completed successfully!"
             }
-
-            // Send success notification
-            emailext (
-                subject: "✅ NBA Stats Tests - Success",
-                body: "All NBA stats automation tests passed successfully.\n\nBuild: ${env.BUILD_URL}",
-                to: "${env.CHANGE_AUTHOR_EMAIL}"
-            )
         }
 
         failure {
