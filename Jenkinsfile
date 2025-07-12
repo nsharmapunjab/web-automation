@@ -119,6 +119,7 @@ pipeline {
                 always {
                     // Archive test results
                     publishTestResults testResultsPattern: 'target/surefire-reports/*.xml'
+		    allure results: [[path: 'target/allure-results']]
                 }
             }
         }
@@ -168,6 +169,7 @@ pipeline {
 
             // Clean up workspace
             cleanWs()
+	    allure results: [[path: 'target/allure-results']]
         }
 
         success {
