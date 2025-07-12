@@ -40,47 +40,6 @@ pipeline {
             }
         }
 
-        stage('Setup Environment') {
-            steps {
-                script {
-                    echo "🛠️ Setting up test environment..."
-                }
-
-                // Clean previous test results
-                sh 'rm -rf target/allure-results target/allure-report target/surefire-reports'
-
-                // Install Chrome browser for headless testing
-                sh '''
-                    if [[ "$OSTYPE" == "darwin"* ]]; then
-                        # macOS install
-                        if ! command -v google-chrome &> /dev/null; then
-                            echo "Installing Chrome on macOS..."
-                            if ! command -v brew &> /dev/null; then
-                                echo "Installing Homebrew..."
-                                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-                            fi
-                            brew install --cask google-chrome
-                        fi
-                    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-                        # Linux install
-                        if ! command -v google-chrome &> /dev/null; then
-                            echo "Installing Chrome on Linux..."
-                            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-                            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-                            sudo apt-get update
-                            sudo apt-get install -y google-chrome-stable
-                        fi
-                    else
-                        echo "Unsupported OS: $OSTYPE"
-                        exit 1
-                    fi
-                '''
-
-                // Set display for headless mode
-                sh 'export DISPLAY=:99'
-            }
-        }
-
         stage('Build') {
             steps {
                 script {
