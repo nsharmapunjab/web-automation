@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="NBA Stats Automation Suite">
+
+    <parameter name="browser" value="chrome"/>
+
+    <listeners>
+        <listener class-name="com.nba.automation.listeners.AllureTestListener"/>
+    </listeners>
+
+    <test name="NBA Stats Tests" preserve-order="true">
+        <classes>
+            <!-- Team wins verification test -->
+            <class name="com.nba.automation.tests.TeamWinsTest">
+                <methods>
+                    <include name="verifyConferenceWinsConsistency"/>
+                </methods>
+            </class>
+
+            <!-- Top players stats verification test -->
+            <class name="com.nba.automation.tests.TopPlayersTest">
+                <methods>
+                    <include name="verifyTop3PlayersStatsConsistency"/>
+                </methods>
+            </class>
+
+            <!-- Performance tests -->
+            <class name="com.nba.automation.tests.PerformanceTest">
+                <methods>
+                    <include name="verifyPlayerPageStatsLoadingPerformance"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+
+</suite>
