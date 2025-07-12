@@ -79,8 +79,13 @@ pipeline {
                             testCommand += " -DsuiteXmlFile=testng.xml"
                     }
 
-                    // Execute tests
-                    sh testCommand
+                    // Execute tests with error handling
+                    try {
+                        sh testCommand
+                    } catch (Exception e) {
+                        echo "⚠️ Tests failed but continuing to generate reports: ${e.getMessage()}"
+                        currentBuild.result = 'UNSTABLE'
+                    }
                 }
             }
             post {
@@ -94,40 +99,36 @@ pipeline {
             }
         }
 
-        stage('Generate Allure Report') {
-            when {
-                // Only generate report if allure results exist
-                expression {
-                    fileExists('target/allure-results')
-                }
-            }
-            steps {
-                script {
-                    echo "📊 Generating Allure test report..."
-
-                    // Ensure the report directory exists
-                    sh "mkdir -p ${env.ALLURE_REPORT_PATH}"
-                }
-
-                // Generate and publish Allure report
-                allure([
-                    includeProperties: false,
-                    jdk: '',
-                    properties: [],
-                    reportBuildPolicy: 'ALWAYS',
-                    results: [[path: env.ALLURE_RESULTS_PATH]]
-                ])
-
-                // Archive the generated report
-                archiveArtifacts artifacts: "${env.ALLURE_REPORT_PATH}/**", allowEmptyArchive: true
-            }
-        }
+        // Remove this stage as Allure generation is now in post section
     }
 
     post {
         always {
             script {
-                echo "🧹 Cleaning up workspace..."
+                echo "🧹 Post-build actions running..."
+
+                // Generate Allure Report (always runs)
+                echo "📊 Generating Allure test report..."
+
+                // Ensure the report directory exists
+                sh "mkdir -p ${env.ALLURE_REPORT_PATH}"
+
+                // Generate and publish Allure report
+                try {
+                    allure([
+                        includeProperties: false,
+                        jdk: '',
+                        properties: [],
+                        reportBuildPolicy: 'ALWAYS',
+                        results: [[path: env.ALLURE_RESULTS_PATH]]
+                    ])
+                    echo "✅ Allure report generated successfully"
+                } catch (Exception e) {
+                    echo "⚠️ Allure report generation failed: ${e.getMessage()}"
+                }
+
+                // Archive the generated report
+                archiveArtifacts artifacts: "${env.ALLURE_REPORT_PATH}/**", allowEmptyArchive: true
             }
 
             // Publish final test results using simple junit step
