@@ -87,6 +87,7 @@ pipeline {
                 always {
                     // Archive test results
                     publishTestResults testResultsPattern: 'target/surefire-reports/*.xml'
+                    archiveArtifacts artifacts: 'target/allure-results/**', allowEmptyArchive: true
                     allure commandline: 'allure', results: [[path: 'target/allure-results']]
                 }
             }
@@ -96,35 +97,26 @@ pipeline {
             steps {
                 script {
                     echo "📊 Generating Allure test report..."
+                    
+                    // Ensure the report directory exists
+                    sh "mkdir -p ${env.ALLURE_REPORT_PATH}"
+                    
+                    // Generate Allure report using the configured paths
+                    sh "mvn allure:report -Dallure.results.directory=${env.ALLURE_RESULTS_PATH} -Dallure.report.directory=${env.ALLURE_REPORT_PATH}"
+                    
+                    // Publish Allure report
+                    allure([
+                        includeProperties: false,
+                        jdk: '',
+                        properties: [],
+                        reportBuildPolicy: 'ALWAYS',
+                        results: [[path: env.ALLURE_RESULTS_PATH]],
+                        report: env.ALLURE_REPORT_PATH
+                    ])
+                    
+                    // Archive the Allure report
+                    archiveArtifacts artifacts: "${env.ALLURE_REPORT_PATH}/**/*", allowEmptyArchive: true
                 }
-
-                // Generate Allure report
-                sh 'mvn allure:report'
-
-                // Publish Allure report
-                allure([
-                    includeProperties: false,
-                    jdk: '',
-                    properties: [],
-                    reportBuildPolicy: 'ALWAYS',
-                    results: [[path: env.ALLURE_RESULTS_PATH]]
-                ])
-            }
-        }
-
-        stage('Archive Artifacts') {
-            steps {
-                script {
-                    echo "📦 Archiving build artifacts..."
-                }
-
-                // Archive test reports and logs
-                archiveArtifacts artifacts: 'target/allure-results/**, target/allure-report/**, target/surefire-reports/**',
-                                 fingerprint: true
-
-                // Archive screenshots if any test failures occurred
-                archiveArtifacts artifacts: 'target/screenshots/**',
-                                 allowEmptyArchive: true
             }
         }
     }
@@ -137,7 +129,6 @@ pipeline {
 
             // Clean up workspace
             cleanWs()
-            allure commandline: 'allure', results: [[path: 'target/allure-results']]
         }
 
         success {
@@ -157,26 +148,12 @@ pipeline {
             script {
                 echo "❌ Pipeline failed!"
             }
-
-            // Send failure notification
-            emailext (
-                subject: "❌ NBA Stats Tests - Failed",
-                body: "NBA stats automation tests failed.\n\nBuild: ${env.BUILD_URL}\nAllure Report: ${env.BUILD_URL}allure/",
-                to: "${env.CHANGE_AUTHOR_EMAIL}"
-            )
         }
 
         unstable {
             script {
                 echo "⚠️ Pipeline completed with test failures!"
             }
-
-            // Send unstable notification
-            emailext (
-                subject: "⚠️ NBA Stats Tests - Unstable",
-                body: "Some NBA stats automation tests failed.\n\nBuild: ${env.BUILD_URL}\nAllure Report: ${env.BUILD_URL}allure/",
-                to: "${env.CHANGE_AUTHOR_EMAIL}"
-            )
         }
     }
 }
