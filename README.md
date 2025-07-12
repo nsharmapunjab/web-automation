@@ -119,12 +119,128 @@ This test plan outlines the automated testing strategy for the NBA Stats website
 - Maximum loading time: 4000 milliseconds
 - All measurements must be accurate to millisecond precision
 
-## 5. Bug Reporting Process
+## 5. Test Execution Strategy
 
-### 5.1 Bug Classification
-- **Critical**: Data inconsistencies, complete page failures
-- **High**: Performance issues exceeding thresholds
-- **Medium**: Minor UI issues, tooltip errors
-- **Low**: Cosmetic issues, minor text discrepancies
+### 5.1 Local Execution
+```bash
+# Run all tests
+mvn clean test
 
-### 5.2 Bug Report Template
+# Run specific test class
+mvn test -Dtest=TeamWinsTest
+
+# Run with custom browser
+mvn test -Dbrowser=chrome
+
+# Generate Allure report
+mvn allure:serve
+```
+
+5.2 CI/CD Execution
+
+Trigger: Git push to main branch, pull request creation
+Schedule: Daily at 6 AM EST
+Parallel Execution: Not implemented (sequential execution for stability)
+Retry Logic: Failed tests retry once automatically
+
+6Acceptance Criteria
+6.1 Test Success Criteria
+
+All test cases pass with 100% success rate
+No data consistency issues detected
+All performance thresholds met
+Zero critical or high severity bugs
+
+6.2 Performance Benchmarks
+
+Page load time: < 4 seconds
+Test execution time: < 5 minutes total
+Report generation: < 2 minutes
+
+6.3 Quality Gates
+
+Code coverage: > 80% for page objects
+Test documentation: 100% of methods documented
+Allure report generation: Must succeed for all runs
+
+7 Risk Assessment
+7.1 Technical Risks
+
+Website structure changes: Medium probability, High impact
+Network connectivity issues: Low probability, Medium impact
+Browser compatibility: Low probability, Low impact
+
+7.2 Mitigation Strategies
+
+Regular locator reviews and updates
+Robust wait strategies implementation
+Comprehensive error handling and logging
+Fallback mechanisms for dynamic content
+
+8Maintenance Plan
+8.1 Regular Reviews
+
+Weekly: Test execution results analysis
+Monthly: Locator stability review
+Quarterly: Test plan and strategy review
+
+8.2 Update Triggers
+
+NBA website UI changes
+New statistical features introduction
+Performance threshold adjustments
+Tool version upgrades
+
+This test plan ensures comprehensive coverage of the NBA Stats website's critical functionality while maintaining high standards for data accuracy and user experience.
+
+How to Use This Framework
+1. Project Setup
+
+Clone/Create Project Structure: Create the directory structure as shown above
+Maven Setup: Place the pom.xml file in the root directory
+Configuration: Add config.properties and allure.properties to src/test/resources/
+Java Classes: Create all Java classes in their respective packages
+
+2. Local Execution
+bash# Install dependencies
+mvn clean compile
+
+# Run all tests
+mvn test
+
+# Run specific test class
+mvn test -Dtest=TeamWinsTest
+
+# Run with specific browser
+mvn test -Dbrowser=chrome -Dheadless=false
+
+# Generate and view Allure report
+mvn allure:serve
+
+3. Jenkins Setup
+
+Create New Pipeline Job in Jenkins
+Add Pipeline Script from SCM or paste the Jenkinsfile content
+Configure Parameters for browser selection and test suite options
+Install Required Plugins:
+
+Allure Jenkins Plugin
+Pipeline Plugin
+Git Plugin
+
+
+
+4. Framework Architecture
+Key Design Patterns Used:
+
+Page Object Model (POM): Each page has its own class with locators and methods
+Singleton Pattern: ConfigManager ensures single instance of configuration
+Factory Pattern: DriverManager creates appropriate WebDriver instances
+ThreadLocal Pattern: Safe parallel execution support
+
+Benefits:
+
+Maintainable: Clear separation of concerns, easy to update locators
+Scalable: Easy to add new pages and tests
+Reliable: Robust wait strategies and error handling
+Reportable: Comprehensive Allure integration with screenshots
