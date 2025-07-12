@@ -52,12 +52,19 @@ pipeline {
                 // Install Chrome browser for headless testing
                 sh '''
                     if ! command -v google-chrome &> /dev/null; then
-                        echo "Installing Chrome browser..."
-                        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
-                        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
-                        apt-get update
-                        apt-get install -y google-chrome-stable
-                    fi
+  		        echo "Installing Chrome browser on macOS..."
+
+   			# Check if Homebrew is installed
+    			if ! command -v brew &> /dev/null; then
+        		    echo "Homebrew not found. Installing Homebrew first..."
+        		    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    			fi
+
+    			# Install Chrome via Homebrew Cask
+    			brew install --cask google-chrome
+		    else
+    		        echo "Chrome is already installed."
+		    fi
                 '''
 
                 // Set display for headless mode
