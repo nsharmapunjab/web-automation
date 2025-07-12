@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         maven 'Maven-3.9.9'
-        jdk 'Java-21'
+        jdk 'JDK-21'
     }
 
     environment {
@@ -51,20 +51,29 @@ pipeline {
 
                 // Install Chrome browser for headless testing
                 sh '''
-                    if ! command -v google-chrome &> /dev/null; then
-  		        echo "Installing Chrome browser on macOS..."
-
-   			# Check if Homebrew is installed
-    			if ! command -v brew &> /dev/null; then
-        		    echo "Homebrew not found. Installing Homebrew first..."
-        		    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    			fi
-
-    			# Install Chrome via Homebrew Cask
-    			brew install --cask google-chrome
-		    else
-    		        echo "Chrome is already installed."
-		    fi
+                    if [[ "$OSTYPE" == "darwin"* ]]; then
+                        # macOS install
+                        if ! command -v google-chrome &> /dev/null; then
+                            echo "Installing Chrome on macOS..."
+                            if ! command -v brew &> /dev/null; then
+                                echo "Installing Homebrew..."
+                                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                            fi
+                            brew install --cask google-chrome
+                        fi
+                    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+                        # Linux install
+                        if ! command -v google-chrome &> /dev/null; then
+                            echo "Installing Chrome on Linux..."
+                            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+                            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+                            sudo apt-get update
+                            sudo apt-get install -y google-chrome-stable
+                        fi
+                    else
+                        echo "Unsupported OS: $OSTYPE"
+                        exit 1
+                    fi
                 '''
 
                 // Set display for headless mode
@@ -119,7 +128,7 @@ pipeline {
                 always {
                     // Archive test results
                     publishTestResults testResultsPattern: 'target/surefire-reports/*.xml'
-		    allure results: [[path: 'target/allure-results']]
+                    allure results: [[path: 'target/allure-results']]
                 }
             }
         }
@@ -169,7 +178,7 @@ pipeline {
 
             // Clean up workspace
             cleanWs()
-	    allure results: [[path: 'target/allure-results']]
+            allure results: [[path: 'target/allure-results']]
         }
 
         success {
