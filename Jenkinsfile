@@ -86,7 +86,7 @@ pipeline {
             post {
                 always {
                     // Publish test results using junit (works with TestNG XML files)
-                    junit testDataPublishers: [schemaValidation(false)], testResultsPattern: 'target/surefire-reports/*.xml'
+                    junit testDataPublishers: [schemaValidation(false)], testResults: 'target/surefire-reports/*.xml'
 
                     // Archive allure results
                     archiveArtifacts artifacts: 'target/allure-results/**', allowEmptyArchive: true
@@ -131,7 +131,7 @@ pipeline {
             }
 
             // Publish final test results using junit (compatible with TestNG)
-            junit testDataPublishers: [schemaValidation(false)], testResultsPattern: 'target/surefire-reports/*.xml'
+            junit testDataPublishers: [schemaValidation(false)], testResults: 'target/surefire-reports/*.xml'
 
             // Archive screenshots if any test failures occurred
             archiveArtifacts artifacts: 'target/screenshots/**', allowEmptyArchive: true
