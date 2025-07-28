@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="AutomationTestSuite">
+    <test name="UI Tests">
+        <classes>
+            <class name="tests.SignUpButtonTest"/>
+            <class name="tests.SearchInputTest"/>
+        </classes>
+    </test>
+</suite>
